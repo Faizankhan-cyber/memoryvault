@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrator Verification Panel — Memory Vault</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span>Memory Vault</span>
+      </a>
+      <nav id="primary-nav" class="primary-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">User Dashboard</a>
+        <a href="legacy-access.html">Trusted Contact Portal</a>
+        <a href="admin.html" class="active">Admin Panel</a>
+      </nav>
+      <div class="header-actions">
+        <button id="admin-logout-btn" type="button" class="btn btn-outline btn-sm" style="display:none;">Sign Out Admin</button>
+        <button id="mobile-menu-btn" type="button" class="mobile-menu-btn" aria-label="Toggle menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <div class="container">
+      <!-- Admin Sign-In View -->
+      <div id="admin-login-section" class="auth-wrapper card">
+        <div class="auth-header">
+          <div class="editorial-kicker">Restricted Governance Portal</div>
+          <h1 style="font-size:2rem;">Administrator Sign In</h1>
+          <p>Sign in with your administrator credentials to verify legacy access requests and maintain the review audit trail.</p>
+        </div>
+
+        <div id="admin-login-error" class="notice-box notice-error" style="display:none;margin-bottom:18px;">
+          <span id="admin-login-error-text"></span>
+        </div>
+
+        <form id="admin-login-form">
+          <div class="form-grid" style="grid-template-columns:1fr;">
+            <div class="form-group">
+              <label for="admin_email">Administrator Email</label>
+              <input id="admin_email" type="email" required placeholder="admin@memoryvault.com" />
+            </div>
+            <div class="form-group">
+              <label for="admin_password">Password</label>
+              <input id="admin_password" type="password" required placeholder="Enter admin password" />
+            </div>
+          </div>
+
+          <div class="form-actions" style="margin-top:20px;">
+            <button id="admin-login-submit" type="submit" class="btn btn-primary btn-lg" style="width:100%;">Sign In as Administrator</button>
+          </div>
+        </form>
+
+        <div class="demo-credentials">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div>
+              <strong>Seeded Admin Credentials</strong><br />
+              Email: <code>admin@memoryvault.com</code><br />
+              Password: <code>Admin@1234</code>
+            </div>
+            <button id="fill-admin-demo" type="button" class="btn btn-outline btn-sm">Fill Admin Demo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Verification Workspace -->
+      <div id="admin-workspace" style="display:none;flex-direction:column;gap:28px;">
+        <div class="page-heading-row">
+          <div>
+            <div class="editorial-kicker">Verification Governance Console</div>
+            <h1 style="font-size:2.1rem;">Legacy Access Verification</h1>
+            <p id="admin-welcome-sub">Review formal legacy requests, confirm documentation, and approve or reject with immutable audit remarks.</p>
+          </div>
+          <div class="segmented-bar" role="tablist" aria-label="Filter legacy requests">
+            <button type="button" class="segmented-btn active" data-filter="all">All</button>
+            <button type="button" class="segmented-btn" data-filter="pending">Pending</button>
+            <button type="button" class="segmented-btn" data-filter="approved">Approved</button>
+            <button type="button" class="segmented-btn" data-filter="rejected">Rejected</button>
+          </div>
+        </div>
+
+        <!-- Admin KPI Strip -->
+        <div class="metrics-grid">
+          <div class="metric-tile">
+            <span class="metric-label">Pending Review</span>
+            <span id="stat-pending" class="metric-value">0</span>
+            <span class="metric-meta">Awaiting verification</span>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-label">Approved Releases</span>
+            <span id="stat-approved" class="metric-value">0</span>
+            <span class="metric-meta">Scoped to authorized items</span>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-label">Rejected Requests</span>
+            <span id="stat-rejected" class="metric-value">0</span>
+            <span class="metric-meta">Vault remained sealed</span>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-label">Total Logged Notices</span>
+            <span id="stat-notifs" class="metric-value">0</span>
+            <span id="stat-users-sub" class="metric-meta">0 registered vault owners</span>
+          </div>
+        </div>
+
+        <!-- Requests Queue -->
+        <div>
+          <h2 style="margin-bottom:16px;">Legacy Access Requests</h2>
+          <div id="admin-requests-list" style="display:flex;flex-direction:column;gap:18px;"></div>
+        </div>
+
+        <!-- Audit Trail & Notification History -->
+        <div class="grid-2" style="align-items:start;">
+          <div class="card">
+            <h2 style="margin-bottom:14px;">Admin Audit Trail</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Request &amp; Action</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-logs-body">
+                  <tr><td colspan="3" style="color:var(--text-secondary);">No audit entries yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 style="margin-bottom:14px;">Recent System Notifications</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Recipient</th>
+                    <th>Subject</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-notifs-body">
+                  <tr><td colspan="3" style="color:var(--text-secondary);">No notifications logged.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>Memory Vault — Digital Legacy Management System</div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="legacy-access.html">Trusted Contact Portal</a>
+        <a href="login.html">User Sign In</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/script.js"></script>
+  <script>
+    (async function () {
+      const { escapeHtml, formatDate, statusClass, toast } = window.MV_UI;
+      let currentFilter = 'all';
+
+      const loginSec = document.getElementById('admin-login-section');
+      const workspace = document.getElementById('admin-workspace');
+      const logoutBtn = document.getElementById('admin-logout-btn');
+
+      document.getElementById('fill-admin-demo').addEventListener('click', () => {
+        document.getElementById('admin_email').value = 'admin@memoryvault.com';
+        document.getElementById('admin_password').value = 'Admin@1234';
+      });
+
+      function showLogin() {
+        loginSec.style.display = 'block';
+        workspace.style.display = 'none';
+        logoutBtn.style.display = 'none';
+      }
+
+      function showWorkspace() {
+        loginSec.style.display = 'none';
+        workspace.style.display = 'flex';
+        logoutBtn.style.display = 'inline-flex';
+      }
+
+      async function loadAdminData() {
+        try {
+          const res = await window.MV_API.request(`admin.php?status=${encodeURIComponent(currentFilter)}`);
+          showWorkspace();
+
+          document.getElementById('admin-welcome-sub').textContent =
+            `Signed in as ${res.admin.full_name} (${res.admin.email}) · Review verification evidence before authorizing release.`;
+
+          document.getElementById('stat-pending').textContent = res.stats.pending;
+          document.getElementById('stat-approved').textContent = res.stats.approved;
+          document.getElementById('stat-rejected').textContent = res.stats.rejected;
+          document.getElementById('stat-notifs').textContent = res.stats.total_notifications;
+          document.getElementById('stat-users-sub').textContent = `${res.stats.total_users} registered vault owner${res.stats.total_users === 1 ? '' : 's'}`;
+
+          const listEl = document.getElementById('admin-requests-list');
+          const requests = res.requests || [];
+
+          if (requests.length === 0) {
+            listEl.innerHTML = `
+              <div class="empty-state">
+                <h3>No requests in this view</h3>
+                <p>Switch filters above or wait for a trusted contact to submit a request via the Trusted Contact Portal.</p>
+              </div>`;
+          } else {
+            listEl.innerHTML = requests.map((req) => `
+              <article class="card">
+                <div class="card-footer-row" style="margin-bottom:14px;">
+                  <div>
+                    <div class="meta-line">
+                      <span class="tabular"><strong>${escapeHtml(req.request_code)}</strong></span>
+                      <span class="meta-sep">·</span>
+                      <span>Submitted ${escapeHtml(formatDate(req.created_at, true))}</span>
+                      <span class="meta-sep">·</span>
+                      <span class="tabular">Owner inactive: ${escapeHtml(req.owner_days_inactive)} day(s)</span>
+                    </div>
+                    <h3 style="margin-top:6px;">${escapeHtml(req.reason)}</h3>
+                  </div>
+                  <span class="status-label ${statusClass(req.status)}">${escapeHtml(req.status.toUpperCase())}</span>
+                </div>
+
+                <div class="grid-2" style="margin-bottom:16px;">
+                  <div class="card-sand" style="padding:14px 16px;font-size:0.88rem;">
+                    <strong>Vault Owner</strong>
+                    <div style="margin-top:4px;">${escapeHtml(req.owner_name)} (@${escapeHtml(req.owner_handle)})</div>
+                    <div style="color:var(--text-secondary);">${escapeHtml(req.owner_email)}</div>
+                    <div style="color:var(--text-secondary);margin-top:4px;" class="tabular">Last check-in: ${escapeHtml(formatDate(req.owner_last_check_in, true))} · Stage ${escapeHtml(req.owner_escalation_stage)}</div>
+                  </div>
+                  <div class="card-sand" style="padding:14px 16px;font-size:0.88rem;">
+                    <strong>Requesting Trusted Contact</strong>
+                    <div style="margin-top:4px;">${escapeHtml(req.contact_name)} (${escapeHtml(req.contact_relationship)})</div>
+                    <div style="color:var(--text-secondary);">${escapeHtml(req.contact_email)}${req.contact_phone ? ` · ${escapeHtml(req.contact_phone)}` : ''}</div>
+                    <div style="color:var(--text-secondary);margin-top:4px;">Invitation: ${escapeHtml(req.contact_invitation_status)} · Scoped release: ${escapeHtml(req.authorized_memories_count)} letter(s), ${escapeHtml(req.authorized_wishes_count)} wish(es)</div>
+                  </div>
+                </div>
+
+                <p style="font-size:0.9rem;color:var(--text-primary);margin-bottom:16px;">
+                  <strong>Verification Evidence / Note:</strong> ${escapeHtml(req.verification_note)}
+                </p>
+
+                <div class="form-group" style="margin-bottom:14px;">
+                  <label for="remarks_${req.id}">Administrative Review Remarks (Recorded in Audit Trail)</label>
+                  <textarea id="remarks_${req.id}" rows="2" placeholder="Document verification checks performed before approving or rejecting…">${escapeHtml(req.admin_remarks || '')}</textarea>
+                </div>
+
+                <div class="card-footer-row">
+                  <div class="form-actions" style="margin-top:0;">
+                    <button type="button" class="btn btn-primary btn-sm" data-review-id="${req.id}" data-decision="approved">Approve Scoped Release</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-review-id="${req.id}" data-decision="rejected">Reject Request</button>
+                  </div>
+                  ${req.reviewed_at ? `<span class="meta-line">Last reviewed ${escapeHtml(formatDate(req.reviewed_at, true))} by ${escapeHtml(req.reviewer_name || 'Admin')}</span>` : ''}
+                </div>
+              </article>
+            `).join('');
+
+            listEl.querySelectorAll('[data-review-id]').forEach((btn) => {
+              btn.addEventListener('click', async () => {
+                const requestId = Number(btn.dataset.reviewId);
+                const decision = btn.dataset.decision;
+                const remarks = document.getElementById(`remarks_${requestId}`).value.trim();
+
+                if (remarks.length < 4) {
+                  toast('Please enter administrative review remarks (minimum 4 characters).', 'warning');
+                  return;
+                }
+
+                btn.disabled = true;
+                try {
+                  const r = await window.MV_API.request('admin.php?action=review', {
+                    method: 'POST',
+                    body: { request_id: requestId, decision, admin_remarks: remarks }
+                  });
+                  toast(r.message);
+                  await loadAdminData();
+                } catch (err) {
+                  toast(err.message || 'Review update failed.', 'error');
+                  btn.disabled = false;
+                }
+              });
+            });
+          }
+
+          // Audit logs table
+          const auditBody = document.getElementById('audit-logs-body');
+          const logs = res.audit_logs || [];
+          auditBody.innerHTML = logs.length === 0
+            ? '<tr><td colspan="3" style="color:var(--text-secondary);">No administrative decisions recorded yet.</td></tr>'
+            : logs.map((a) => `
+                <tr>
+                  <td class="tabular" style="font-size:0.8rem;white-space:nowrap;">${escapeHtml(formatDate(a.created_at, true))}</td>
+                  <td style="font-size:0.84rem;">
+                    <strong>${escapeHtml(a.request_code || '—')}</strong>
+                    <div style="color:var(--text-secondary);">${escapeHtml(a.action.replace(/_/g, ' '))} · ${escapeHtml(a.admin_name)}</div>
+                  </td>
+                  <td style="font-size:0.84rem;">${escapeHtml(a.remarks)}</td>
+                </tr>
+              `).join('');
+
+          // Notifications table
+          const notifBody = document.getElementById('admin-notifs-body');
+          const notifs = res.notifications || [];
+          notifBody.innerHTML = notifs.length === 0
+            ? '<tr><td colspan="3" style="color:var(--text-secondary);">No notifications logged.</td></tr>'
+            : notifs.map((n) => `
+                <tr>
+                  <td class="tabular" style="font-size:0.8rem;white-space:nowrap;">${escapeHtml(formatDate(n.created_at, true))}</td>
+                  <td style="font-size:0.84rem;">${escapeHtml(n.recipient_email)}</td>
+                  <td style="font-size:0.84rem;">${escapeHtml(n.subject)}</td>
+                </tr>
+              `).join('');
+        } catch (err) {
+          showLogin();
+        }
+      }
+
+      document.querySelectorAll('[data-filter]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-filter]').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.filter;
+          loadAdminData();
+        });
+      });
+
+      document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errBox = document.getElementById('admin-login-error');
+        const errText = document.getElementById('admin-login-error-text');
+        errBox.style.display = 'none';
+
+        const email = document.getElementById('admin_email').value.trim();
+        const password = document.getElementById('admin_password').value;
+
+        try {
+          await window.MV_API.request('auth.php?action=admin_login', {
+            method: 'POST',
+            body: { email, password }
+          });
+          toast('Signed in to Administrator Panel.');
+          await loadAdminData();
+        } catch (err) {
+          errText.textContent = err.message || 'Administrator sign in failed.';
+          errBox.style.display = 'flex';
+        }
+      });
+
+      logoutBtn.addEventListener('click', async () => {
+        try {
+          await window.MV_API.request('auth.php?action=admin_logout', { method: 'POST', body: {} });
+          toast('Administrator signed out.');
+          showLogin();
+        } catch (err) {
+          toast(err.message || 'Sign out failed.', 'error');
+        }
+      });
+
+      // Check initial session
+      const session = await window.MV_API.initSession().catch(() => ({}));
+      if (session.admin_authenticated) {
+        await loadAdminData();
+      } else {
+        showLogin();
+      }
+    })();
+  </script>
+</body>
+</html>
